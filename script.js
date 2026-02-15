@@ -1,8 +1,11 @@
-// =========================================================
-// PART 1: HERO, AUTH & NAVIGATION (NEW LOGIC)
-// =========================================================
+// ============================================
+// PERSONAL EXPENSE TRACKER - FIXED SCRIPT
+// With Landing Page + Auth + Main App
+// ============================================
 
-// Global Variables (App State)
+// ============================================
+// GLOBAL VARIABLES
+// ============================================
 let expenses = [];
 let monthlyBudget = 0;
 let categoryChart = null;
@@ -11,56 +14,25 @@ let templates = [];
 let editingExpenseId = null;
 let currentUser = null;
 
-// Initialize App & Auth Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    createParticles(); // Start hero animations
-    
-    // Check Authentication Status immediately
-    if (typeof firebase !== 'undefined' && firebase.auth()) {
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                // User is logged in: Skip Hero, Show App
-                currentUser = {
-                    uid: user.uid,
-                    email: user.email,
-                    name: user.displayName || user.email
-                };
-                showMainApp(currentUser);
-            } else {
-                // User is NOT logged in: Show Hero
-                document.getElementById('hero-landing').style.display = 'flex';
-            }
-        });
-    } else {
-        // Fallback if Firebase isn't loaded (e.g., offline)
-        const storedUser = localStorage.getItem('currentUser');
-        if (storedUser) {
-            currentUser = JSON.parse(storedUser);
-            showMainApp(currentUser);
-        } else {
-            document.getElementById('hero-landing').style.display = 'flex';
-        }
-    }
-});
+// ============================================
+// PAGE TRANSITIONS
+// ============================================
 
-// Trigger Curtain Effect & Show Auth Layer
 function enterAuth() {
     const hero = document.getElementById('hero-landing');
     const auth = document.getElementById('auth-container');
     
-    // 1. Slide Hero Up
+    // Slide hero up
     hero.classList.add('slide-up');
     
-    // 2. Show Auth Layer after small delay
+    // Show auth after animation
     setTimeout(() => {
+        hero.style.display = 'none'; // CRITICAL: Remove from DOM
         auth.style.display = 'flex';
-        // Trigger reflow for transition
-        void auth.offsetWidth; 
-        auth.style.opacity = '1';
-    }, 400);
+        setTimeout(() => auth.style.opacity = '1', 50);
+    }, 800);
 }
 
-// Back Button Logic (Return to Hero)
 function backToHero() {
     const hero = document.getElementById('hero-landing');
     const auth = document.getElementById('auth-container');
@@ -68,183 +40,264 @@ function backToHero() {
     auth.style.opacity = '0';
     setTimeout(() => {
         auth.style.display = 'none';
+        hero.style.display = 'flex';
         hero.classList.remove('slide-up');
     }, 500);
 }
 
-// Switch between Login and Signup tabs
 function switchTab(tab) {
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
-    const btns = document.querySelectorAll('.tab-btn');
+    const tabs = document.querySelectorAll('.tab-btn');
+    
+    tabs.forEach(btn => btn.classList.remove('active'));
     
     if (tab === 'login') {
+        tabs[0].classList.add('active');
         loginForm.classList.add('active');
         signupForm.classList.remove('active');
-        btns[0].classList.add('active');
-        btns[1].classList.remove('active');
     } else {
-        loginForm.classList.remove('active');
+        tabs[1].classList.add('active');
         signupForm.classList.add('active');
-        btns[0].classList.remove('active');
-        btns[1].classList.add('active');
+        loginForm.classList.remove('active');
     }
 }
 
-// Reveal Main Dashboard
-function showMainApp(user) {
-    // Hide Hero & Auth Layers
-    const hero = document.getElementById('hero-landing');
+function showMainApp() {
     const auth = document.getElementById('auth-container');
+    const mainApp = document.getElementById('main-app-container');
     
-    if(hero) hero.style.display = 'none';
-    if(auth) auth.style.display = 'none';
-    
-    // Show Main App Container
-    const app = document.getElementById('main-app-container');
-    app.style.display = 'block';
-    
-    // Update Header with User Info
-    const greeting = document.getElementById('userGreeting');
-    if(greeting) {
-        greeting.innerText = user.name || user.email.split('@')[0];
-    }
-    
-    // Initialize App Data
-    initializeApp();
+    auth.style.opacity = '0';
+    setTimeout(() => {
+        auth.style.display = 'none';
+        mainApp.style.display = 'block';
+        initializeApp();
+    }, 500);
 }
 
-// Particle Effects Generator
-function createParticles() {
-    const container = document.getElementById('particle-container');
-    if(!container) return;
-    
-    // Clear existing particles if any
-    container.innerHTML = '';
+// ============================================
+// AUTHENTICATION
+// ============================================
 
-    for (let i = 0; i < 50; i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        p.style.left = Math.random() * 100 + 'vw';
-        p.style.animationDuration = (Math.random() * 10 + 10) + 's';
-        p.style.opacity = Math.random() * 0.5;
-        container.appendChild(p);
-    }
-}
-
-// --- AUTH EVENT HANDLERS ---
-
-// Handle Login Submit
-const loginForm = document.getElementById('loginForm');
-if(loginForm) {
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value;
-        const pass = document.getElementById('loginPassword').value;
-        const btn = loginForm.querySelector('button');
-        
-        btn.textContent = 'Logging in...';
-        btn.disabled = true;
-        
-        firebase.auth().signInWithEmailAndPassword(email, pass)
-            .then((cred) => {
-                showToast('Welcome back!', 'success');
-                // showMainApp is handled by onAuthStateChanged
-            })
-            .catch((err) => {
-                showToast(err.message, 'error');
-                btn.textContent = 'Log In';
-                btn.disabled = false;
-            });
-    });
-}
-
-// Handle Signup Submit
-const signupForm = document.getElementById('signupForm');
-if(signupForm) {
-    signupForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const name = document.getElementById('signupName').value;
-        const email = document.getElementById('signupEmail').value;
-        const pass = document.getElementById('signupPassword').value;
-        const btn = signupForm.querySelector('button');
-        
-        btn.textContent = 'Creating Account...';
-        btn.disabled = true;
-        
-        firebase.auth().createUserWithEmailAndPassword(email, pass)
-            .then((cred) => {
-                return cred.user.updateProfile({ displayName: name })
-                    .then(() => {
-                        showToast('Account created!', 'success');
-                        // showMainApp is handled by onAuthStateChanged
-                    });
-            })
-            .catch((err) => {
-                showToast(err.message, 'error');
-                btn.textContent = 'Create Account';
-                btn.disabled = false;
-            });
-    });
-}
-
-// Handle Logout
-const logoutBtn = document.getElementById('logoutBtn');
-if(logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-        if(confirm('Are you sure you want to logout?')) {
-            firebase.auth().signOut().then(() => {
-                location.reload(); // Reloads page to show Hero animation again
-            });
+// Check if user is already logged in on page load
+document.addEventListener('DOMContentLoaded', () => {
+    if (auth) {
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    name: user.displayName || user.email
+                };
+                // Skip landing/auth, go straight to app
+                document.getElementById('hero-landing').style.display = 'none';
+                document.getElementById('auth-container').style.display = 'none';
+                document.getElementById('main-app-container').style.display = 'block';
+                initializeApp();
+            }
+        });
+    } else {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+            currentUser = JSON.parse(storedUser);
+            document.getElementById('hero-landing').style.display = 'none';
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('main-app-container').style.display = 'block';
+            initializeApp();
         }
-    });
+    }
+    
+    // Setup form listeners
+    setupAuthForms();
+    createParticles();
+});
+
+function setupAuthForms() {
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+    
+    if (signupForm) {
+        signupForm.addEventListener('submit', handleSignup);
+    }
 }
 
+async function handleLogin(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const btn = e.target.querySelector('button[type="submit"]');
+    
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+    
+    if (!auth) {
+        // localStorage mode
+        const users = JSON.parse(localStorage.getItem('users') || '{}');
+        const user = users[email];
+        
+        if (user && user.password === password) {
+            currentUser = { email, name: user.name, uid: user.uid };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showToast('Login successful!', 'success');
+            showMainApp();
+        } else {
+            showToast('Invalid email or password', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Log In';
+        }
+        return;
+    }
+    
+    try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        currentUser = {
+            uid: userCredential.user.uid,
+            email: userCredential.user.email,
+            name: userCredential.user.displayName || userCredential.user.email
+        };
+        showToast('Login successful!', 'success');
+        showMainApp();
+    } catch (error) {
+        console.error('Login error:', error);
+        let errorMessage = 'Login failed';
+        
+        switch (error.code) {
+            case 'auth/user-not-found':
+                errorMessage = 'No account found with this email';
+                break;
+            case 'auth/wrong-password':
+                errorMessage = 'Incorrect password';
+                break;
+            case 'auth/invalid-email':
+                errorMessage = 'Invalid email address';
+                break;
+        }
+        
+        showToast(errorMessage, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Log In';
+    }
+}
 
-// =========================================================
-// PART 2: EXPENSE TRACKER LOGIC (CORE FUNCTIONALITY)
-// =========================================================
+async function handleSignup(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const btn = e.target.querySelector('button[type="submit"]');
+    
+    if (password.length < 6) {
+        showToast('Password must be at least 6 characters', 'error');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = 'Creating Account...';
+    
+    if (!auth) {
+        // localStorage mode
+        const users = JSON.parse(localStorage.getItem('users') || '{}');
+        
+        if (users[email]) {
+            showToast('Account already exists. Please login.', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Create Account';
+            return;
+        }
+        
+        const uid = 'user_' + Date.now();
+        users[email] = { name, password, uid };
+        localStorage.setItem('users', JSON.stringify(users));
+        
+        currentUser = { email, name, uid };
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        showToast('Account created successfully!', 'success');
+        showMainApp();
+        return;
+    }
+    
+    try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        await user.updateProfile({ displayName: name });
+        
+        await db.collection('users').doc(user.uid).set({
+            name: name,
+            email: email,
+            createdAt: new Date().toISOString()
+        });
+        
+        currentUser = {
+            uid: user.uid,
+            email: user.email,
+            name: name
+        };
+        
+        showToast('Account created successfully!', 'success');
+        showMainApp();
+    } catch (error) {
+        console.error('Signup error:', error);
+        let errorMessage = 'Account creation failed';
+        
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                errorMessage = 'Account already exists. Please login.';
+                break;
+            case 'auth/invalid-email':
+                errorMessage = 'Invalid email address';
+                break;
+            case 'auth/weak-password':
+                errorMessage = 'Password must be at least 6 characters';
+                break;
+        }
+        
+        showToast(errorMessage, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+    }
+}
+
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        if (auth) {
+            auth.signOut().then(() => {
+                window.location.reload();
+            });
+        } else {
+            localStorage.removeItem('currentUser');
+            window.location.reload();
+        }
+    }
+}
+
+// ============================================
+// APP INITIALIZATION
+// ============================================
 
 function initializeApp() {
-    console.log('Initializing app logic...');
+    console.log('Initializing app for user:', currentUser);
+    
+    if (currentUser) {
+        const greeting = document.getElementById('userGreeting');
+        if (greeting) {
+            greeting.textContent = currentUser.name || currentUser.email;
+        }
+    }
     
     setTodayDate();
     displayCurrentMonth();
     loadBudget();
     loadTemplates();
-    loadExpenses(); // This now checks Firebase or LocalStorage based on auth
+    loadExpenses();
     setupEventListeners();
-    
-    // Force chart render
-    setTimeout(() => {
-        if (expenses.length > 0) {
-            updateCategoryBreakdown();
-            updateSpendingChart();
-        }
-    }, 500);
-}
-
-function setupEventListeners() {
-    const expenseForm = document.getElementById('expenseForm');
-    const setBudgetBtn = document.getElementById('setBudgetBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const searchExpenses = document.getElementById('searchExpenses');
-    const addTemplateBtn = document.getElementById('addTemplateBtn');
-    
-    // Clean and attach listeners
-    if (expenseForm) {
-        const newForm = expenseForm.cloneNode(true);
-        expenseForm.parentNode.replaceChild(newForm, expenseForm);
-        newForm.addEventListener('submit', addExpense);
-    }
-    
-    if (setBudgetBtn) setBudgetBtn.onclick = setBudget;
-    if (exportBtn) exportBtn.onclick = exportToCSV;
-    if (addTemplateBtn) addTemplateBtn.onclick = showTemplateModal;
-    
-    if (searchExpenses) {
-        searchExpenses.addEventListener('input', searchAndFilterExpenses);
-    }
 }
 
 // ============================================
@@ -265,11 +318,60 @@ function displayCurrentMonth() {
 }
 
 // ============================================
-// EXPENSE CRUD
+// EVENT LISTENERS SETUP
+// ============================================
+
+function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    
+    const expenseForm = document.getElementById('expenseForm');
+    const setBudgetBtn = document.getElementById('setBudgetBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const addTemplateBtn = document.getElementById('addTemplateBtn');
+    const searchExpenses = document.getElementById('searchExpenses');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    if (expenseForm) {
+        const newForm = expenseForm.cloneNode(true);
+        expenseForm.parentNode.replaceChild(newForm, expenseForm);
+        newForm.addEventListener('submit', addExpense);
+    }
+    
+    if (setBudgetBtn && !setBudgetBtn.hasAttribute('data-listener')) {
+        setBudgetBtn.setAttribute('data-listener', 'true');
+        setBudgetBtn.addEventListener('click', setBudget);
+    }
+    
+    if (exportBtn && !exportBtn.hasAttribute('data-listener')) {
+        exportBtn.setAttribute('data-listener', 'true');
+        exportBtn.addEventListener('click', exportToCSV);
+    }
+    
+    if (addTemplateBtn && !addTemplateBtn.hasAttribute('data-listener')) {
+        addTemplateBtn.setAttribute('data-listener', 'true');
+        addTemplateBtn.addEventListener('click', showTemplateModal);
+    }
+    
+    if (searchExpenses && !searchExpenses.hasAttribute('data-listener')) {
+        searchExpenses.setAttribute('data-listener', 'true');
+        searchExpenses.addEventListener('input', searchAndFilterExpenses);
+    }
+    
+    if (logoutBtn && !logoutBtn.hasAttribute('data-listener')) {
+        logoutBtn.setAttribute('data-listener', 'true');
+        logoutBtn.addEventListener('click', logout);
+    }
+    
+    console.log('Event listeners setup complete');
+}
+
+// ============================================
+// EXPENSE MANAGEMENT
 // ============================================
 
 async function addExpense(e) {
     e.preventDefault();
+    console.log('Adding expense...');
     
     if (editingExpenseId) {
         await updateExpense();
@@ -282,63 +384,91 @@ async function addExpense(e) {
     const dateInput = document.getElementById('date');
     const recurringInput = document.getElementById('recurring');
     
+    if (!amountInput || !categoryInput || !descriptionInput || !dateInput) {
+        showToast('Form error - please refresh page', 'error');
+        return;
+    }
+    
+    const amount = parseFloat(amountInput.value);
+    const category = categoryInput.value;
+    const description = descriptionInput.value;
+    const date = dateInput.value;
+    const recurring = recurringInput ? recurringInput.checked : false;
+    
     const expense = {
-        amount: parseFloat(amountInput.value),
-        category: categoryInput.value,
-        description: descriptionInput.value,
-        date: dateInput.value,
-        recurring: recurringInput ? recurringInput.checked : false,
+        amount,
+        category,
+        description,
+        date,
+        recurring,
         userId: currentUser ? currentUser.uid : 'local',
         timestamp: new Date().toISOString()
     };
     
-    if (currentUser && typeof db !== 'undefined') {
+    if (useFirebase && db && currentUser) {
         try {
             await db.collection('expenses').add(expense);
-            resetExpenseForm();
+            document.getElementById('expenseForm').reset();
+            setTodayDate();
             await loadExpenses();
-            showToast('Expense added!', 'success');
+            showToast('Expense added successfully!', 'success');
+            return;
         } catch (error) {
             console.error('Firebase error:', error);
-            showToast('Error adding expense', 'error');
         }
-    } else {
-        // Local Fallback
-        expense.id = Date.now().toString();
-        expenses.push(expense);
-        saveExpensesToLocalStorage();
-        resetExpenseForm();
-        refreshAllDisplays();
-        showToast('Expense added (Local)', 'success');
     }
+    
+    expense.id = Date.now().toString();
+    expenses.push(expense);
+    saveExpensesToLocalStorage();
+    document.getElementById('expenseForm').reset();
+    setTodayDate();
+    loadExpensesFromLocalStorage();
+    showToast('Expense added successfully!', 'success');
 }
 
 async function loadExpenses() {
-    if (currentUser && typeof db !== 'undefined') {
+    console.log('Loading expenses...');
+    
+    if (useFirebase && db && currentUser) {
         try {
             const snapshot = await db.collection('expenses')
                 .where('userId', '==', currentUser.uid)
                 .orderBy('date', 'desc')
                 .get();
-                
             expenses = [];
+            
             snapshot.forEach(doc => {
-                expenses.push({ id: doc.id, ...doc.data() });
+                expenses.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
             });
+            
+            console.log('Loaded expenses from Firebase:', expenses.length);
             refreshAllDisplays();
+            return;
         } catch (error) {
-            console.error('Error loading:', error);
+            console.error('Error loading from Firebase:', error);
         }
-    } else {
-        loadExpensesFromLocalStorage();
     }
+    
+    loadExpensesFromLocalStorage();
 }
 
 function loadExpensesFromLocalStorage() {
     const userId = currentUser ? currentUser.uid : 'local';
     const stored = localStorage.getItem(`expenses_${userId}`);
     expenses = stored ? JSON.parse(stored) : [];
+    console.log('Loaded expenses from localStorage:', expenses.length);
     refreshAllDisplays();
+}
+
+function refreshAllDisplays() {
+    console.log('Refreshing all displays...');
+    displayExpenses(expenses);
+    updateSummary();
+    updateSpendingChart();
 }
 
 function saveExpensesToLocalStorage() {
@@ -346,39 +476,34 @@ function saveExpensesToLocalStorage() {
     localStorage.setItem(`expenses_${userId}`, JSON.stringify(expenses));
 }
 
-function refreshAllDisplays() {
-    displayExpenses(expenses);
-    updateSummary();
-    updateCategoryBreakdown();
-    updateSpendingChart();
-    // generateInsights(); // Uncomment if insights logic exists
-    // generateMonthComparison(); // Uncomment if comparison logic exists
-}
-
 function displayExpenses(expensesToDisplay) {
-    const list = document.getElementById('expensesList');
-    if (!list) return;
+    const expensesList = document.getElementById('expensesList');
+    if (!expensesList) return;
     
     if (!expensesToDisplay || expensesToDisplay.length === 0) {
-        list.innerHTML = `
-            <div class="empty-state" style="text-align: center; padding: 20px; color: var(--text-secondary);">
-                <p>No expenses found. Start tracking!</p>
-            </div>`;
+        expensesList.innerHTML = `
+            <div class="empty-state">
+                <h3>No expenses yet</h3>
+                <p>Start tracking by adding your first expense above</p>
+            </div>
+        `;
         return;
     }
     
-    list.innerHTML = expensesToDisplay.map(exp => `
+    expensesList.innerHTML = expensesToDisplay.map(expense => `
         <div class="expense-item">
             <div class="expense-info">
-                <h4>${exp.description}</h4>
-                <p>${new Date(exp.date).toLocaleDateString('en-IN', { dateStyle: 'medium' })}</p>
-                <span class="expense-category">${getCategoryIcon(exp.category)} ${exp.category}</span>
-                ${exp.recurring ? '<span class="expense-category" style="background: #8b5cf6;">🔄 Recurring</span>' : ''}
+                <h4>${expense.description}</h4>
+                <p>${new Date(expense.date).toLocaleDateString('en-IN', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                })}</p>
+                <span class="expense-category">${getCategoryIcon(expense.category)} ${expense.category}</span>
             </div>
-            <div class="expense-amount">₹${exp.amount.toFixed(2)}</div>
+            <div class="expense-amount">₹${expense.amount.toFixed(2)}</div>
             <div class="expense-actions">
-                <button class="btn-edit" onclick="editExpense('${exp.id}')">✏️</button>
-                <button class="btn-delete" onclick="deleteExpense('${exp.id}')">🗑️</button>
+                <button class="btn-delete" onclick="deleteExpense('${expense.id}')">🗑️</button>
             </div>
         </div>
     `).join('');
@@ -387,316 +512,371 @@ function displayExpenses(expensesToDisplay) {
 async function deleteExpense(id) {
     if (!confirm('Delete this expense?')) return;
     
-    if (currentUser && typeof db !== 'undefined') {
+    if (useFirebase && db) {
         try {
             await db.collection('expenses').doc(id).delete();
             await loadExpenses();
-            showToast('Expense deleted', 'success');
-        } catch(e) { console.error(e); }
-    } else {
-        expenses = expenses.filter(e => e.id !== id);
-        saveExpensesToLocalStorage();
-        refreshAllDisplays();
-        showToast('Expense deleted', 'success');
-    }
-}
-
-function editExpense(id) {
-    const exp = expenses.find(e => e.id === id);
-    if (!exp) return;
-    
-    document.getElementById('amount').value = exp.amount;
-    document.getElementById('category').value = exp.category;
-    document.getElementById('description').value = exp.description;
-    document.getElementById('date').value = exp.date;
-    const recurring = document.getElementById('recurring');
-    if(recurring) recurring.checked = exp.recurring;
-    
-    editingExpenseId = id;
-    
-    const btn = document.querySelector('#expenseForm button[type="submit"]');
-    btn.textContent = 'Update Expense';
-    
-    // Scroll to form
-    document.querySelector('.add-expense-section').scrollIntoView({behavior: 'smooth'});
-}
-
-async function updateExpense() {
-    const amount = parseFloat(document.getElementById('amount').value);
-    const category = document.getElementById('category').value;
-    const description = document.getElementById('description').value;
-    const date = document.getElementById('date').value;
-    const recurring = document.getElementById('recurring').checked;
-    
-    const updatedData = {
-        amount, category, description, date, recurring,
-        userId: currentUser.uid,
-        timestamp: new Date().toISOString()
-    };
-    
-    if (currentUser && typeof db !== 'undefined') {
-        await db.collection('expenses').doc(editingExpenseId).update(updatedData);
-        await loadExpenses();
-    } else {
-        const index = expenses.findIndex(e => e.id === editingExpenseId);
-        if(index !== -1) {
-            expenses[index] = { ...expenses[index], ...updatedData };
-            saveExpensesToLocalStorage();
-            refreshAllDisplays();
+            showToast('Expense deleted!', 'success');
+            return;
+        } catch (error) {
+            console.error('Firebase error:', error);
         }
     }
     
-    resetExpenseForm();
-    showToast('Expense updated', 'success');
-}
-
-function resetExpenseForm() {
-    document.getElementById('expenseForm').reset();
-    setTodayDate();
-    const btn = document.querySelector('#expenseForm button[type="submit"]');
-    btn.textContent = 'Add Expense';
-    editingExpenseId = null;
+    expenses = expenses.filter(exp => exp.id !== id);
+    saveExpensesToLocalStorage();
+    loadExpensesFromLocalStorage();
+    showToast('Expense deleted!', 'success');
 }
 
 // ============================================
-// BUDGET & CHARTS
+// BUDGET MANAGEMENT
 // ============================================
+
+function updateSummary() {
+    console.log('Updating summary...');
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const currentMonthExpenses = expenses.filter(exp => exp.date.startsWith(currentMonth));
+    const total = currentMonthExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+    
+    const remaining = monthlyBudget - total;
+    
+    const totalSpending = document.getElementById('totalSpending');
+    const monthlyBudgetEl = document.getElementById('monthlyBudget');
+    const remainingEl = document.getElementById('remaining');
+    
+    if (totalSpending) totalSpending.textContent = `₹${total.toFixed(2)}`;
+    if (monthlyBudgetEl) monthlyBudgetEl.textContent = `₹${monthlyBudget.toFixed(2)}`;
+    if (remainingEl) {
+        remainingEl.textContent = `₹${remaining.toFixed(2)}`;
+        
+        if (remaining < 0) {
+            remainingEl.style.color = 'var(--danger-color)';
+        } else if (remaining < monthlyBudget * 0.2) {
+            remainingEl.style.color = 'var(--warning-color)';
+        } else {
+            remainingEl.style.color = 'var(--success-color)';
+        }
+    }
+    
+    if (monthlyBudget > 0) {
+        updateProgressBar(total, monthlyBudget);
+    }
+}
 
 function setBudget() {
-    const input = document.getElementById('budgetInput');
-    const val = parseFloat(input.value);
-    if (val > 0) {
-        monthlyBudget = val;
-        localStorage.setItem('monthlyBudget', val);
-        updateSummary();
-        showToast('Budget set!', 'success');
+    console.log('Setting budget...');
+    const budgetInput = document.getElementById('budgetInput');
+    if (!budgetInput) return;
+    
+    const budget = parseFloat(budgetInput.value);
+    
+    if (isNaN(budget) || budget <= 0) {
+        showToast('Please enter a valid budget amount', 'error');
+        return;
     }
+    
+    monthlyBudget = budget;
+    localStorage.setItem('monthlyBudget', monthlyBudget);
+    
+    const progressDiv = document.getElementById('budgetProgress');
+    if (progressDiv) progressDiv.style.display = 'block';
+    
+    updateSummary();
+    showToast('Budget set successfully!', 'success');
 }
 
 function loadBudget() {
     const stored = localStorage.getItem('monthlyBudget');
     if (stored) {
         monthlyBudget = parseFloat(stored);
-        document.getElementById('budgetInput').value = monthlyBudget;
-        updateSummary();
+        const budgetInput = document.getElementById('budgetInput');
+        if (budgetInput) budgetInput.value = monthlyBudget;
+        const progressDiv = document.getElementById('budgetProgress');
+        if (progressDiv) progressDiv.style.display = 'block';
     }
 }
 
-function updateSummary() {
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    const monthlyExpenses = expenses.filter(e => e.date.startsWith(currentMonth));
-    const total = monthlyExpenses.reduce((sum, e) => sum + e.amount, 0);
-    const remaining = monthlyBudget - total;
-    
-    document.getElementById('totalSpending').textContent = `₹${total.toFixed(2)}`;
-    document.getElementById('monthlyBudget').textContent = `₹${monthlyBudget.toFixed(2)}`;
-    
-    const remainingEl = document.getElementById('remaining');
-    remainingEl.textContent = `₹${remaining.toFixed(2)}`;
-    remainingEl.style.color = remaining < 0 ? 'var(--danger-color)' : 'var(--success-color)';
-    
-    // Progress Bar
-    const progress = document.getElementById('progressBar');
+function updateProgressBar(spent, budget) {
+    const percentage = (spent / budget) * 100;
+    const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
-    const container = document.getElementById('budgetProgress');
     
-    if (monthlyBudget > 0) {
-        container.style.display = 'block';
-        const pct = Math.min((total / monthlyBudget) * 100, 100);
-        progress.style.width = `${pct}%`;
-        progressText.textContent = `${pct.toFixed(1)}%`;
-        
-        // Remove old classes
-        progress.classList.remove('warning', 'danger');
-        if(pct > 90) progress.classList.add('danger');
-        else if(pct > 75) progress.classList.add('warning');
+    if (progressBar) {
+        progressBar.style.width = `${Math.min(percentage, 100)}%`;
+        progressBar.className = 'progress-bar';
+        if (percentage >= 100) {
+            progressBar.classList.add('danger');
+        } else if (percentage >= 80) {
+            progressBar.classList.add('warning');
+        }
     }
-}
-
-function updateCategoryBreakdown() {
-    // Basic implementation for breakdown
-    if(expenses.length === 0) return;
     
-    const totals = {};
-    expenses.forEach(e => {
-        totals[e.category] = (totals[e.category] || 0) + e.amount;
-    });
-    
-    // Render Chart
-    const ctx = document.getElementById('categoryChart');
-    if (!ctx) return;
-    
-    if (categoryChart) categoryChart.destroy();
-    
-    categoryChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(totals),
-            datasets: [{
-                data: Object.values(totals),
-                backgroundColor: [
-                    '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'bottom', labels: { color: '#94a3b8' } }
-            }
-        }
-    });
-}
-
-function updateSpendingChart() {
-    const ctx = document.getElementById('spendingChart');
-    if (!ctx || expenses.length === 0) return;
-    
-    const daily = {};
-    expenses.forEach(e => {
-        daily[e.date] = (daily[e.date] || 0) + e.amount;
-    });
-    
-    const sortedDates = Object.keys(daily).sort();
-    const data = sortedDates.map(d => daily[d]);
-    
-    if (spendingChart) spendingChart.destroy();
-    
-    spendingChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: sortedDates.map(d => new Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'})),
-            datasets: [{
-                label: 'Spending',
-                data: data,
-                borderColor: '#6366f1',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
-                x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
+    if (progressText) {
+        progressText.textContent = `${percentage.toFixed(1)}%`;
+    }
 }
 
 // ============================================
-// TEMPLATES & EXPORT
+// SPENDING CHART
+// ============================================
+
+function updateSpendingChart() {
+    console.log('Updating spending chart...');
+    
+    const ctx = document.getElementById('spendingChart');
+    if (!ctx) return;
+    
+    if (spendingChart) {
+        spendingChart.destroy();
+        spendingChart = null;
+    }
+    
+    if (!expenses || expenses.length === 0) {
+        console.log('No expenses for spending chart');
+        return;
+    }
+    
+    const dailyTotals = {};
+    expenses.forEach(exp => {
+        const date = exp.date;
+        dailyTotals[date] = (dailyTotals[date] || 0) + exp.amount;
+    });
+    
+    const sorted = Object.entries(dailyTotals).sort((a, b) => a[0].localeCompare(b[0]));
+    
+    if (sorted.length === 0) return;
+    
+    const labels = sorted.map(([date]) => new Date(date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }));
+    const data = sorted.map(([, amount]) => amount);
+    
+    try {
+        spendingChart = new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Daily Spending',
+                    data: data,
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#f1f5f9'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: '#334155' }
+                    },
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: '#334155' }
+                    }
+                }
+            }
+        });
+        console.log('Spending chart created successfully');
+    } catch (error) {
+        console.error('Error creating spending chart:', error);
+    }
+}
+
+// ============================================
+// SEARCH & FILTER
+// ============================================
+
+function searchAndFilterExpenses() {
+    const searchInput = document.getElementById('searchExpenses');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    
+    let filtered = expenses;
+    
+    if (searchTerm) {
+        filtered = filtered.filter(exp => 
+            exp.description.toLowerCase().includes(searchTerm) ||
+            exp.category.toLowerCase().includes(searchTerm) ||
+            exp.amount.toString().includes(searchTerm)
+        );
+    }
+    
+    displayExpenses(filtered);
+}
+
+// ============================================
+// EXPORT
+// ============================================
+
+function exportToCSV() {
+    if (expenses.length === 0) {
+        showToast('No expenses to export', 'error');
+        return;
+    }
+    
+    const headers = ['Date', 'Category', 'Description', 'Amount'];
+    const rows = expenses.map(exp => [
+        exp.date,
+        exp.category,
+        exp.description,
+        exp.amount
+    ]);
+    
+    let csv = headers.join(',') + '\n';
+    rows.forEach(row => {
+        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `expenses_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    
+    showToast('Expenses exported!', 'success');
+}
+
+// ============================================
+// TEMPLATES
 // ============================================
 
 function loadTemplates() {
     const stored = localStorage.getItem('expenseTemplates');
     templates = stored ? JSON.parse(stored) : [];
-    renderTemplates();
+    displayTemplates();
 }
 
-function renderTemplates() {
-    const list = document.getElementById('templatesList');
-    if(!list) return;
+function saveTemplates() {
+    localStorage.setItem('expenseTemplates', JSON.stringify(templates));
+}
+
+function displayTemplates() {
+    const templatesList = document.getElementById('templatesList');
+    if (!templatesList) return;
     
-    if(templates.length === 0) {
-        list.innerHTML = '<span style="color:var(--text-secondary); font-size: 0.9rem;">No templates yet.</span>';
+    if (templates.length === 0) {
+        templatesList.innerHTML = '<p style="color: var(--text-secondary); font-size: 14px; margin: 0;">Create quick templates!</p>';
         return;
     }
     
-    list.innerHTML = templates.map((t, i) => `
-        <button class="template-btn" onclick="applyTemplate(${i})">
-            ${getCategoryIcon(t.category)} ${t.name}
-            <span class="template-delete" onclick="event.stopPropagation(); deleteTemplate(${i})">×</span>
+    templatesList.innerHTML = templates.map((template, index) => `
+        <button class="template-btn" onclick="applyTemplate(${index})">
+            ${getCategoryIcon(template.category)} ${template.name} - ₹${template.amount}
         </button>
     `).join('');
 }
 
 function showTemplateModal() {
-    const name = prompt("Template Name (e.g., Coffee):");
-    if(!name) return;
-    const amount = prompt("Amount:");
-    const category = prompt("Category (Food, Transport, etc.):");
-    
-    templates.push({ name, amount: parseFloat(amount), category });
-    localStorage.setItem('expenseTemplates', JSON.stringify(templates));
-    renderTemplates();
-    showToast('Template added', 'success');
+    showToast('Template feature - coming soon!', 'info');
 }
 
 function applyTemplate(index) {
-    const t = templates[index];
-    document.getElementById('amount').value = t.amount;
-    document.getElementById('category').value = t.category;
-    document.getElementById('description').value = t.name;
-    document.getElementById('date').value = new Date().toISOString().split('T')[0];
-    showToast('Template applied', 'info');
-}
-
-function deleteTemplate(index) {
-    if(confirm('Delete template?')) {
-        templates.splice(index, 1);
-        localStorage.setItem('expenseTemplates', JSON.stringify(templates));
-        renderTemplates();
-    }
-}
-
-function exportToCSV() {
-    if (expenses.length === 0) return showToast('Nothing to export', 'error');
+    const template = templates[index];
     
-    const headers = ['Date', 'Category', 'Description', 'Amount'];
-    const rows = expenses.map(e => [e.date, e.category, e.description, e.amount]);
+    const amountInput = document.getElementById('amount');
+    const categoryInput = document.getElementById('category');
+    const descriptionInput = document.getElementById('description');
     
-    let csv = headers.join(',') + '\n';
-    rows.forEach(r => csv += r.join(',') + '\n');
+    if (amountInput) amountInput.value = template.amount;
+    if (categoryInput) categoryInput.value = template.category;
+    if (descriptionInput) descriptionInput.value = template.name;
     
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'expenses.csv';
-    a.click();
-}
-
-function searchAndFilterExpenses() {
-    const term = document.getElementById('searchExpenses').value.toLowerCase();
-    const filtered = expenses.filter(e => 
-        e.description.toLowerCase().includes(term) || 
-        e.category.toLowerCase().includes(term)
-    );
-    displayExpenses(filtered);
+    showToast(`Template applied!`, 'info');
 }
 
 // ============================================
-// UTILS
+// UTILITY FUNCTIONS
 // ============================================
 
 function getCategoryIcon(category) {
     const icons = {
-        'Food': '🍔', 'Transport': '🚗', 'Entertainment': '🎬',
-        'Shopping': '🛍️', 'Bills': '💡', 'Health': '🏥',
-        'Education': '📚', 'Other': '📦'
+        'Food': '🍔',
+        'Transport': '🚗',
+        'Entertainment': '🎬',
+        'Shopping': '🛍️',
+        'Bills': '💡',
+        'Health': '🏥',
+        'Education': '📚',
+        'Other': '📦'
     };
     return icons[category] || '📦';
 }
+
+// ============================================
+// TOAST NOTIFICATIONS
+// ============================================
 
 function showToast(message, type = 'success') {
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
         container.id = 'toastContainer';
+        container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10000;';
         document.body.appendChild(container);
     }
     
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerText = message;
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    
+    toast.style.cssText = `
+        background: var(--card-bg);
+        border-left: 4px solid var(--primary-color);
+        padding: 16px 20px;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        min-width: 300px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    toast.innerHTML = `
+        <span>${icons[type] || icons.info}</span>
+        <span>${message}</span>
+    `;
+    
     container.appendChild(toast);
     
     setTimeout(() => {
-        toast.style.opacity = '0';
+        toast.style.animation = 'slideIn 0.3s ease reverse';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
+
+// ============================================
+// PARTICLES
+// ============================================
+
+function createParticles() {
+    const container = document.getElementById('particle-container');
+    if (!container) return;
+    
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+        container.appendChild(particle);
+    }
+}
+
+console.log('Script.js loaded successfully');
