@@ -1319,3 +1319,61 @@ function hideLoading() {
 }
 
 console.log('Script.js loaded successfully');
+// ==========================================
+// HERO LANDING PAGE LOGIC
+// ==========================================
+
+// 1. Particle Generator (The Antigravity Effect)
+function createParticles() {
+    const container = document.getElementById('particle-container');
+    if(!container) return; // Guard clause in case element is missing
+    
+    const particleCount = 60; 
+    const colors = ['p-red', 'p-blue', 'p-green', 'p-yellow'];
+
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        
+        // Random Color
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        particle.classList.add(randomColor);
+
+        // Random Position & Speed
+        particle.style.left = Math.random() * 100 + 'vw';
+        particle.style.animationDuration = (Math.random() * 8 + 12) + 's'; // 12-20s duration
+        particle.style.animationDelay = (Math.random() * 10) + 's';
+        particle.style.opacity = Math.random() * 0.6 + 0.3; 
+
+        container.appendChild(particle);
+    }
+}
+
+// 2. Enter App Animation
+window.enterApp = function() {
+    const hero = document.getElementById('hero-landing');
+    const app = document.getElementById('main-app-container');
+
+    // Slide the hero up
+    hero.style.transition = 'transform 0.8s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.8s';
+    hero.style.transform = 'translateY(-100vh)';
+    
+    // Reveal the app
+    app.style.display = 'block';
+    
+    // Smooth fade in for the app content
+    setTimeout(() => {
+        app.style.transition = 'opacity 0.6s ease-in';
+        app.style.opacity = '1';
+    }, 100);
+
+    // Cleanup: remove hero from DOM flow after animation finishes
+    setTimeout(() => {
+        hero.style.display = 'none';
+    }, 800);
+};
+
+// Initialize particles on load
+document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+});

@@ -3,187 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Expense Tracker</title>
+    <title>ExpenseTracker - Financial Clarity</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header>
-            <h1>💰 Expense Tracker</h1>
-            <div class="header-controls">
-                <!-- Login UI (shown when not logged in) -->
-                <div id="loginUI" class="inline-login" style="display: none;">
-                    <div id="emailStep" class="login-step">
-                        <input type="email" id="headerEmail" placeholder="Enter your email" class="inline-input">
-                        <button onclick="proceedToPassword()" class="inline-btn">Next →</button>
-                    </div>
-                    <div id="passwordStep" class="login-step" style="display: none;">
-                        <input type="password" id="headerPassword" placeholder="Enter password" class="inline-input">
-                        <button onclick="performLogin()" class="inline-btn">Login</button>
-                        <button onclick="backToEmail()" class="inline-btn-secondary">← Back</button>
-                    </div>
-                    <a href="signup.html" class="signup-link">New? Sign up</a>
-                </div>
-                
-                <!-- User UI (shown when logged in) -->
-                <div id="userUI" style="display: none;">
-                    <span id="userGreeting" style="margin-right: 15px; color: var(--text-secondary);"></span>
-                    <a href="savings.html" class="icon-btn">💎 Savings</a>
-                    <button id="darkModeToggle" class="icon-btn">🌙</button>
-                    <button id="exportBtn" class="icon-btn">📥 Export</button>
-                    <button id="logoutBtn" class="icon-btn" style="background: var(--danger-color); color: white;">🚪 Logout</button>
-                </div>
-            </div>
-        </header>
 
-        <!-- Summary Cards -->
-        <div class="summary-section">
-            <div class="card">
-                <h3>This Month's Spending</h3>
-                <p class="amount" id="totalSpending">₹0</p>
+    <section id="hero-landing">
+        <div class="particle-container" id="particle-container"></div>
+        
+        <nav class="hero-nav">
+            <div class="hero-logo">
+                <span class="logo-icon">✨</span> ExpenseTracker
             </div>
-            <div class="card">
-                <h3>Monthly Budget</h3>
-                <p class="amount" id="monthlyBudget">₹0</p>
+            <div class="nav-links">
+                <a href="#">Product</a>
+                <a href="#">Use Cases</a>
+                <a href="#">Pricing</a>
+                <a href="#">Resources</a>
             </div>
-            <div class="card">
-                <h3>Remaining</h3>
-                <p class="amount" id="remaining">₹0</p>
-            </div>
-        </div>
+            <button class="nav-btn-outline" onclick="enterApp()">Sign In</button>
+        </nav>
 
-        <!-- Budget Setup -->
-        <div class="budget-section card">
-            <h3>Set Monthly Budget</h3>
-            <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 10px;">
-                Current Month: <strong id="currentMonthDisplay"></strong>
+        <div class="hero-content">
+            <div class="pill-badge">
+                <span class="pill-icon"><i class="fa-brands fa-google"></i></span>
+                <span>Powered by Firebase & GitHub</span>
+            </div>
+            
+            <h1 class="hero-title">
+                Experience financial<br>
+                liftoff with the<br>
+                <span class="gradient-text">next-gen tracker</span>
+            </h1>
+
+            <p class="hero-subtitle">
+                Track expenses, manage budgets, and visualize your savings 
+                with a platform designed for speed, simplicity, and total control.
             </p>
-            <div class="budget-input-group">
-                <input type="number" id="budgetInput" placeholder="Enter budget amount">
-                <button id="setBudgetBtn">Set Budget</button>
-            </div>
-            <div id="budgetProgress" class="progress-bar-container" style="display: none;">
-                <div class="progress-bar" id="progressBar"></div>
-                <span id="progressText">0%</span>
-            </div>
-        </div>
 
-        <!-- Quick Add Templates -->
-        <div class="quick-add-section card">
-            <h3>⚡ Quick Add Templates</h3>
-            <div class="templates-container">
-                <div id="templatesList"></div>
-                <button class="template-add-btn" id="addTemplateBtn" title="Create new template">
-                    <span class="plus-icon">+</span>
+            <div class="hero-buttons">
+                <button class="btn-hero-primary" onclick="enterApp()">
+                    <i class="fa-brands fa-windows"></i> Get Started
+                </button>
+                <button class="btn-hero-secondary" onclick="enterApp()">
+                    Explore use cases
                 </button>
             </div>
         </div>
+    </section>
 
-        <!-- Add Expense Form -->
-        <div class="add-expense-section card">
-            <h3>Add New Expense</h3>
-            <form id="expenseForm">
-                <div class="form-group">
-                    <label>Amount (₹)</label>
-                    <input type="number" id="amount" required min="0" step="0.01">
+    <div id="main-app-container" style="display: none; opacity: 0;">
+        <div class="container">
+            <header>
+                <h1>💰 Expense Tracker</h1>
+                <div class="header-controls">
+                    <div id="loginUI" class="inline-login" style="display: none;">
+                        <div id="emailStep" class="login-step">
+                            <input type="email" id="headerEmail" placeholder="Enter your email" class="inline-input">
+                            <button onclick="proceedToPassword()" class="inline-btn">Next →</button>
+                        </div>
+                        <div id="passwordStep" class="login-step" style="display: none;">
+                            <input type="password" id="headerPassword" placeholder="Enter password" class="inline-input">
+                            <button onclick="performLogin()" class="inline-btn">Login</button>
+                            <button onclick="backToEmail()" class="inline-btn-secondary">← Back</button>
+                        </div>
+                        <a href="signup.html" class="signup-link">New? Sign up</a>
+                    </div>
+                    
+                    <div id="userUI" style="display: none;">
+                        <span id="userGreeting" style="margin-right: 15px; color: var(--text-secondary);"></span>
+                        <a href="savings.html" class="icon-btn">💎 Savings</a>
+                        <button id="darkModeToggle" class="icon-btn">🌙</button>
+                        <button id="exportBtn" class="icon-btn">📥 Export</button>
+                        <button id="logoutBtn" class="icon-btn" style="background: var(--danger-color); color: white;">🚪 Logout</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Category</label>
-                    <select id="category" required>
-                        <option value="">Select Category</option>
-                        <option value="Food">🍔 Food</option>
-                        <option value="Transport">🚗 Transport</option>
-                        <option value="Entertainment">🎬 Entertainment</option>
-                        <option value="Shopping">🛍️ Shopping</option>
-                        <option value="Bills">💡 Bills</option>
-                        <option value="Health">🏥 Health</option>
-                        <option value="Education">📚 Education</option>
-                        <option value="Other">📦 Other</option>
+            </header>
+
+            <div class="summary-section">
+                <div class="card">
+                    <h3>This Month's Spending</h3>
+                    <p class="amount" id="totalSpending">₹0</p>
+                </div>
+                <div class="card">
+                    <h3>Monthly Budget</h3>
+                    <p class="amount" id="monthlyBudget">₹0</p>
+                </div>
+                <div class="card">
+                    <h3>Remaining</h3>
+                    <p class="amount" id="remaining">₹0</p>
+                </div>
+            </div>
+
+            <div class="budget-section card">
+                <h3>Set Monthly Budget</h3>
+                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 10px;">
+                    Current Month: <strong id="currentMonthDisplay"></strong>
+                </p>
+                <div class="budget-input-group">
+                    <input type="number" id="budgetInput" placeholder="Enter budget amount">
+                    <button id="setBudgetBtn">Set Budget</button>
+                </div>
+                <div id="budgetProgress" class="progress-bar-container" style="display: none;">
+                    <div class="progress-bar" id="progressBar"></div>
+                    <span id="progressText">0%</span>
+                </div>
+            </div>
+
+            <div class="quick-add-section card">
+                <h3>⚡ Quick Add Templates</h3>
+                <div class="templates-container">
+                    <div id="templatesList"></div>
+                    <button class="template-add-btn" id="addTemplateBtn" title="Create new template">
+                        <span class="plus-icon">+</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="add-expense-section card">
+                <h3>Add New Expense</h3>
+                <form id="expenseForm">
+                    <div class="form-group">
+                        <label>Amount (₹)</label>
+                        <input type="number" id="amount" required min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="category" required>
+                            <option value="">Select Category</option>
+                            <option value="Food">🍔 Food</option>
+                            <option value="Transport">🚗 Transport</option>
+                            <option value="Entertainment">🎬 Entertainment</option>
+                            <option value="Shopping">🛍️ Shopping</option>
+                            <option value="Bills">💡 Bills</option>
+                            <option value="Health">🏥 Health</option>
+                            <option value="Education">📚 Education</option>
+                            <option value="Other">📦 Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="description" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="recurring">
+                            Recurring Expense
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-primary">Add Expense</button>
+                </form>
+            </div>
+
+            <div class="category-section card">
+                <h3>Category Breakdown</h3>
+                <canvas id="categoryChart"></canvas>
+                <div id="categoryList"></div>
+            </div>
+
+            <div class="chart-section card">
+                <h3>Spending Over Time</h3>
+                <canvas id="spendingChart"></canvas>
+            </div>
+
+            <div class="expenses-section card">
+                <h3>Recent Expenses</h3>
+                <div class="search-section">
+                    <input type="text" id="searchExpenses" placeholder="🔍 Search expenses...">
+                </div>
+                <div class="filter-section">
+                    <select id="filterCategory">
+                        <option value="all">All Categories</option>
+                        <option value="Food">Food</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Bills">Bills</option>
+                        <option value="Health">Health</option>
+                        <option value="Education">Education</option>
+                        <option value="Other">Other</option>
                     </select>
+                    <input type="month" id="filterMonth">
                 </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <input type="text" id="description" required>
-                </div>
-                <div class="form-group">
-                    <label>Date</label>
-                    <input type="date" id="date" required>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="recurring">
-                        Recurring Expense
-                    </label>
-                </div>
-                <button type="submit" class="btn-primary">Add Expense</button>
-            </form>
-        </div>
-
-        <!-- Category Breakdown -->
-        <div class="category-section card">
-            <h3>Category Breakdown</h3>
-            <canvas id="categoryChart"></canvas>
-            <div id="categoryList"></div>
-        </div>
-
-        <!-- Spending Over Time -->
-        <div class="chart-section card">
-            <h3>Spending Over Time</h3>
-            <canvas id="spendingChart"></canvas>
-        </div>
-
-        <!-- Expense List -->
-        <div class="expenses-section card">
-            <h3>Recent Expenses</h3>
-            <div class="search-section">
-                <input type="text" id="searchExpenses" placeholder="🔍 Search expenses...">
+                <div id="expensesList"></div>
             </div>
-            <div class="filter-section">
-                <select id="filterCategory">
-                    <option value="all">All Categories</option>
-                    <option value="Food">Food</option>
-                    <option value="Transport">Transport</option>
-                    <option value="Entertainment">Entertainment</option>
-                    <option value="Shopping">Shopping</option>
-                    <option value="Bills">Bills</option>
-                    <option value="Health">Health</option>
-                    <option value="Education">Education</option>
-                    <option value="Other">Other</option>
-                </select>
-                <input type="month" id="filterMonth">
+
+            <div class="insights-section card">
+                <h3>💡 Spending Insights</h3>
+                <div id="insightsList"></div>
             </div>
-            <div id="expensesList"></div>
-        </div>
 
-        <!-- Insights Section -->
-        <div class="insights-section card">
-            <h3>💡 Spending Insights</h3>
-            <div id="insightsList"></div>
-        </div>
-
-        <!-- Month Comparison -->
-        <div class="comparison-section card">
-            <h3>📊 Month Comparison</h3>
-            <div id="comparisonView"></div>
+            <div class="comparison-section card">
+                <h3>📊 Month Comparison</h3>
+                <div id="comparisonView"></div>
+            </div>
         </div>
     </div>
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
-    <!-- Firebase Configuration (LOAD FIRST) -->
     <script src="firebase-config.js"></script>
     
-    <!-- Chart.js for graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Main Script -->
     <script src="script.js"></script>
     
-    <!-- Toast Notification Container -->
     <div id="toastContainer"></div>
 </body>
 </html>
