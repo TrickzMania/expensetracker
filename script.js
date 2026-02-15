@@ -468,6 +468,7 @@ function refreshAllDisplays() {
     console.log('Refreshing all displays...');
     displayExpenses(expenses);
     updateSummary();
+    updateCategoryBreakdown();
     updateSpendingChart();
 }
 
@@ -614,6 +615,124 @@ function updateProgressBar(spent, budget) {
     
     if (progressText) {
         progressText.textContent = `${percentage.toFixed(1)}%`;
+    }
+}
+
+// ============================================
+// CATEGORY BREAKDOWN
+// ============================================
+
+function updateCategoryBreakdown() {
+    console.log('Updating category breakdown...');
+    
+    if (!expenses || expenses.length === 0) {
+        const categoryList = document.getElementById('categoryList');
+        if (categoryList) {
+            categoryList.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">No expenses to display</p>';
+        }
+        // Clear chart if exists
+        if (categoryChart) {
+            categoryChart.destroy();
+            categoryChart = null;
+        }
+        return;
+    }
+    
+    const categoryTotals = {};
+    
+    expenses.forEach(exp => {
+        categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+    });
+    
+    const sorted = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+    
+    const categoryList = document.getElementById('categoryList');
+    if (categoryList) {
+        categoryList.innerHTML = sorted.map(([category, amount]) => `
+            <div class="category-item">
+                <span class="category-name">${getCategoryIcon(category)} ${category}</span>
+                <span class="category-amount">₹${amount.toFixed(2)}</span>
+            </div>
+        `).join('');
+    }
+    
+    updateCategoryChart(categoryTotals);
+}
+
+function updateCategoryChart(categoryTotals) {
+    const ctx = document.getElementById('categoryChart');
+    if (!ctx) {
+        console.log('Category chart canvas not found');
+        return;
+    }
+    
+    // Destroy existing chart
+    if (categoryChart) {
+        categoryChart.destroy();
+        categoryChart = null;
+    }
+    
+    const labels = Object.keys(categoryTotals);
+    const data = Object.values(categoryTotals);
+    
+    if (labels.length === 0) {
+        console.log('No category data to display');
+        return;
+    }
+    
+    try {
+        categoryChart = new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b',
+                        '#10b981', '#3b82f6', '#ef4444', '#64748b'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#1e293b'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#f1f5f9',
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f1f5f9',
+                        bodyColor: '#94a3b8',
+                        borderColor: '#334155',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return ` ${label}: ₹${value.toFixed(2)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        console.log('Category chart created successfully');
+    } catch (error) {
+        console.error('Error creating category chart:', error);
     }
 }
 
@@ -773,12 +892,86 @@ function displayTemplates() {
     templatesList.innerHTML = templates.map((template, index) => `
         <button class="template-btn" onclick="applyTemplate(${index})">
             ${getCategoryIcon(template.category)} ${template.name} - ₹${template.amount}
+            <span class="template-delete" onclick="event.stopPropagation(); deleteTemplate(${index})">×</span>
         </button>
     `).join('');
 }
 
 function showTemplateModal() {
-    showToast('Template feature - coming soon!', 'info');
+    // Remove existing modal if any
+    const existingModal = document.querySelector('.modal-overlay');
+    if (existingModal) existingModal.remove();
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal">
+            <h3>Create Quick-Add Template</h3>
+            <form id="templateForm">
+                <div class="form-group">
+                    <label>Template Name</label>
+                    <input type="text" id="templateName" required placeholder="e.g., Morning Coffee, Lunch">
+                </div>
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" id="templateAmount" required min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="templateCategory" required>
+                        <option value="Food">🍔 Food</option>
+                        <option value="Transport">🚗 Transport</option>
+                        <option value="Entertainment">🎬 Entertainment</option>
+                        <option value="Shopping">🛍️ Shopping</option>
+                        <option value="Bills">💡 Bills</option>
+                        <option value="Health">🏥 Health</option>
+                        <option value="Education">📚 Education</option>
+                        <option value="Other">📦 Other</option>
+                    </select>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-secondary" onclick="closeTemplateModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Template</button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeTemplateModal();
+    });
+    
+    // Handle form submission
+    const form = document.getElementById('templateForm');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const template = {
+            name: document.getElementById('templateName').value,
+            amount: parseFloat(document.getElementById('templateAmount').value),
+            category: document.getElementById('templateCategory').value
+        };
+        
+        templates.push(template);
+        saveTemplates();
+        displayTemplates();
+        closeTemplateModal();
+        showToast('Template created successfully!', 'success');
+    });
+    
+    // Focus first input
+    setTimeout(() => {
+        const firstInput = document.getElementById('templateName');
+        if (firstInput) firstInput.focus();
+    }, 100);
+}
+
+function closeTemplateModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) modal.remove();
 }
 
 function applyTemplate(index) {
@@ -787,12 +980,35 @@ function applyTemplate(index) {
     const amountInput = document.getElementById('amount');
     const categoryInput = document.getElementById('category');
     const descriptionInput = document.getElementById('description');
+    const dateInput = document.getElementById('date');
     
     if (amountInput) amountInput.value = template.amount;
     if (categoryInput) categoryInput.value = template.category;
     if (descriptionInput) descriptionInput.value = template.name;
+    if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
     
-    showToast(`Template applied!`, 'info');
+    // Scroll to form
+    const formCard = document.querySelector('.add-expense-section');
+    if (formCard) {
+        formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        formCard.style.transform = 'scale(1.02)';
+        formCard.style.boxShadow = '0 8px 30px rgba(99, 102, 241, 0.3)';
+        setTimeout(() => {
+            formCard.style.transform = '';
+            formCard.style.boxShadow = '';
+        }, 300);
+    }
+    
+    showToast(`Template "${template.name}" applied!`, 'info');
+}
+
+function deleteTemplate(index) {
+    if (confirm('Delete this template?')) {
+        templates.splice(index, 1);
+        saveTemplates();
+        displayTemplates();
+        showToast('Template deleted', 'success');
+    }
 }
 
 // ============================================

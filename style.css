@@ -741,12 +741,144 @@ header h1 {
 }
 
 /* Chart Styles */
-.chart-section {
+.chart-section, .category-section {
     min-height: 300px;
 }
 
+.chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
 canvas {
-    max-height: 300px !important;
+    max-height: 350px !important;
+}
+
+/* Category List */
+.category-list {
+    margin-top: 20px;
+}
+
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: all 0.3s;
+}
+
+.category-item:hover {
+    background: var(--border-color);
+    transform: translateX(4px);
+}
+
+.category-name {
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.category-amount {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* Template Delete Button */
+.template-delete {
+    margin-left: 8px;
+    color: var(--danger-color);
+    font-size: 1.2rem;
+    font-weight: bold;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+}
+
+.template-delete:hover {
+    opacity: 1;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal h3 {
+    margin-bottom: 24px;
+    text-align: center;
+    color: var(--text-color);
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.modal-buttons button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-secondary {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
 }
 
 /* Animations */
@@ -761,7 +893,7 @@ canvas {
     }
 }
 
-/* Responsive */
+/* Responsive - ENHANCED FOR MOBILE */
 @media (max-width: 768px) {
     .hero-title {
         font-size: 2.5rem;
@@ -769,20 +901,180 @@ canvas {
     
     .hero-subtitle {
         font-size: 1rem;
+        padding: 0 20px;
+    }
+    
+    .hero-nav {
+        padding: 16px 20px;
+    }
+    
+    .hero-logo {
+        font-size: 1.2rem;
+    }
+    
+    .nav-btn-glass {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .btn-hero-glow {
+        padding: 14px 36px;
+        font-size: 1rem;
+    }
+    
+    .auth-card {
+        padding: 28px 24px;
+        max-width: 95%;
     }
     
     header {
         flex-direction: column;
         gap: 16px;
+        align-items: flex-start;
+    }
+    
+    header h1 {
+        font-size: 1.5rem;
     }
     
     .header-controls {
         width: 100%;
-        justify-content: center;
+        justify-content: flex-start;
         flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .user-badge {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+    
+    .icon-btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
     }
     
     .summary-section {
         grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .card {
+        padding: 16px;
+    }
+    
+    .card h3 {
+        font-size: 1.1rem;
+    }
+    
+    .amount {
+        font-size: 1.5rem;
+    }
+    
+    .budget-input-group {
+        flex-direction: column;
+    }
+    
+    .budget-input-group button {
+        width: 100%;
+    }
+    
+    .templates-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .template-btn {
+        width: 100%;
+    }
+    
+    .template-add-btn {
+        width: 100%;
+        height: 48px;
+        border-radius: 12px;
+    }
+    
+    .form-group input,
+    .form-group select {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .expense-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .expense-amount {
+        font-size: 1.2rem;
+        align-self: flex-start;
+    }
+    
+    .expense-actions {
+        align-self: flex-end;
+    }
+    
+    .chart-container {
+        padding: 10px 0;
+    }
+    
+    canvas {
+        max-height: 250px !important;
+    }
+    
+    .modal {
+        padding: 24px 20px;
+        width: 95%;
+    }
+    
+    .modal-buttons {
+        flex-direction: column;
+    }
+    
+    .modal-buttons button {
+        width: 100%;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 2rem;
+        letter-spacing: -1px;
+    }
+    
+    .hero-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .pill-badge {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+    
+    .auth-card {
+        padding: 20px;
+    }
+    
+    .input-group input {
+        padding: 12px 12px 12px 40px;
+        font-size: 16px;
+    }
+    
+    .btn-auth-submit {
+        padding: 12px;
+        font-size: 0.95rem;
+    }
+    
+    header h1 {
+        font-size: 1.3rem;
+    }
+    
+    .card {
+        padding: 12px;
+    }
+    
+    .amount {
+        font-size: 1.3rem;
     }
 }
