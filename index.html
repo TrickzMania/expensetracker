@@ -6,24 +6,21 @@
     <title>ExpenseTracker - Financial Clarity</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <section id="hero-landing">
         <div class="particle-container" id="particle-container"></div>
+        <div class="gradient-overlay"></div>
         
         <nav class="hero-nav">
             <div class="hero-logo">
-                <span class="logo-icon">✨</span> ExpenseTracker
+                <span class="logo-icon">⚡</span> ExpenseTracker
             </div>
-            <div class="nav-links">
-                <a href="#">Product</a>
-                <a href="#">Use Cases</a>
-                <a href="#">Pricing</a>
-                <a href="#">Resources</a>
-            </div>
-            <button class="nav-btn-outline" onclick="enterApp()">Sign In</button>
+            <button class="nav-btn-glass" onclick="enterAuth()">
+                Sign In <i class="fa-solid fa-arrow-right"></i>
+            </button>
         </nav>
 
         <div class="hero-content">
@@ -34,8 +31,7 @@
             
             <h1 class="hero-title">
                 Experience financial<br>
-                liftoff with the<br>
-                <span class="gradient-text">next-gen tracker</span>
+                clarity in <span class="gradient-text">dark mode.</span>
             </h1>
 
             <p class="hero-subtitle">
@@ -44,41 +40,75 @@
             </p>
 
             <div class="hero-buttons">
-                <button class="btn-hero-primary" onclick="enterApp()">
-                    <i class="fa-brands fa-windows"></i> Get Started
-                </button>
-                <button class="btn-hero-secondary" onclick="enterApp()">
-                    Explore use cases
+                <button class="btn-hero-glow" onclick="enterAuth()">
+                    Get Started
                 </button>
             </div>
         </div>
     </section>
 
-    <div id="main-app-container" style="display: none; opacity: 0;">
+    <section id="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>Welcome Back</h2>
+                <p>Manage your finance with ease</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+                <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+            </div>
+
+            <form id="loginForm" class="auth-form active">
+                <div class="input-group">
+                    <i class="fa-solid fa-envelope"></i>
+                    <input type="email" id="loginEmail" placeholder="Email Address" required>
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn-auth-submit">Log In</button>
+            </form>
+
+            <form id="signupForm" class="auth-form">
+                <div class="input-group">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" id="signupName" placeholder="Full Name" required>
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-envelope"></i>
+                    <input type="email" id="signupEmail" placeholder="Email Address" required>
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="signupPassword" placeholder="Create Password" required>
+                </div>
+                <button type="submit" class="btn-auth-submit">Create Account</button>
+            </form>
+
+            <p class="auth-footer" onclick="backToHero()" style="cursor: pointer; margin-top: 20px; font-size: 0.9rem; opacity: 0.7;">
+                <i class="fa-solid fa-arrow-left"></i> Back to Home
+            </p>
+        </div>
+    </section>
+
+    <div id="main-app-container" style="display: none;">
         <div class="container">
             <header>
                 <h1>💰 Expense Tracker</h1>
                 <div class="header-controls">
-                    <div id="loginUI" class="inline-login" style="display: none;">
-                        <div id="emailStep" class="login-step">
-                            <input type="email" id="headerEmail" placeholder="Enter your email" class="inline-input">
-                            <button onclick="proceedToPassword()" class="inline-btn">Next →</button>
+                    <div id="userUI" class="user-badge">
+                        <div class="user-info">
+                            <span class="user-avatar">👤</span>
+                            <span id="userGreeting">Loading...</span>
                         </div>
-                        <div id="passwordStep" class="login-step" style="display: none;">
-                            <input type="password" id="headerPassword" placeholder="Enter password" class="inline-input">
-                            <button onclick="performLogin()" class="inline-btn">Login</button>
-                            <button onclick="backToEmail()" class="inline-btn-secondary">← Back</button>
-                        </div>
-                        <a href="signup.html" class="signup-link">New? Sign up</a>
+                        <button id="logoutBtn" class="icon-btn logout-btn">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
                     </div>
-                    
-                    <div id="userUI" style="display: none;">
-                        <span id="userGreeting" style="margin-right: 15px; color: var(--text-secondary);"></span>
-                        <a href="savings.html" class="icon-btn">💎 Savings</a>
-                        <button id="darkModeToggle" class="icon-btn">🌙</button>
-                        <button id="exportBtn" class="icon-btn">📥 Export</button>
-                        <button id="logoutBtn" class="icon-btn" style="background: var(--danger-color); color: white;">🚪 Logout</button>
-                    </div>
+                    <a href="savings.html" class="icon-btn">💎 Savings</a>
+                    <button id="exportBtn" class="icon-btn">📥 Export</button>
                 </div>
             </header>
 
@@ -161,12 +191,6 @@
                 </form>
             </div>
 
-            <div class="category-section card">
-                <h3>Category Breakdown</h3>
-                <canvas id="categoryChart"></canvas>
-                <div id="categoryList"></div>
-            </div>
-
             <div class="chart-section card">
                 <h3>Spending Over Time</h3>
                 <canvas id="spendingChart"></canvas>
@@ -177,31 +201,7 @@
                 <div class="search-section">
                     <input type="text" id="searchExpenses" placeholder="🔍 Search expenses...">
                 </div>
-                <div class="filter-section">
-                    <select id="filterCategory">
-                        <option value="all">All Categories</option>
-                        <option value="Food">Food</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Entertainment">Entertainment</option>
-                        <option value="Shopping">Shopping</option>
-                        <option value="Bills">Bills</option>
-                        <option value="Health">Health</option>
-                        <option value="Education">Education</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <input type="month" id="filterMonth">
-                </div>
                 <div id="expensesList"></div>
-            </div>
-
-            <div class="insights-section card">
-                <h3>💡 Spending Insights</h3>
-                <div id="insightsList"></div>
-            </div>
-
-            <div class="comparison-section card">
-                <h3>📊 Month Comparison</h3>
-                <div id="comparisonView"></div>
             </div>
         </div>
     </div>
@@ -211,11 +211,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <script src="firebase-config.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <script src="script.js"></script>
-    
     <div id="toastContainer"></div>
 </body>
 </html>
