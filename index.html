@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,13 +8,42 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #invoiceTemplate,
+            #invoiceTemplate * {
+                visibility: visible;
+            }
+
+            #invoiceTemplate {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                color: black;
+            }
+
+            .invoice-header,
+            .invoice-summary,
+            .invoice-table {
+                color: #000;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
     <section id="hero-landing">
         <div class="particle-container" id="particle-container"></div>
         <div class="gradient-overlay"></div>
-        
+
         <nav class="hero-nav">
             <div class="hero-logo">
                 <span class="logo-icon">⚡</span> ExpenseTracker
@@ -28,14 +58,14 @@
                 <span class="pill-icon"><i class="fa-brands fa-google"></i></span>
                 <span>Powered by Firebase & GitHub</span>
             </div>
-            
+
             <h1 class="hero-title">
                 Experience financial<br>
                 clarity in <span class="gradient-text">dark mode.</span>
             </h1>
 
             <p class="hero-subtitle">
-                Track expenses, manage budgets, and visualize your savings 
+                Track expenses, manage budgets, and visualize your savings
                 with a platform designed for speed, simplicity, and total control.
             </p>
 
@@ -53,7 +83,7 @@
                 <h2>Welcome Back</h2>
                 <p>Manage your finance with ease</p>
             </div>
-            
+
             <div class="auth-tabs">
                 <button class="tab-btn active" onclick="switchTab('login')">Login</button>
                 <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
@@ -87,7 +117,8 @@
                 <button type="submit" class="btn-auth-submit">Create Account</button>
             </form>
 
-            <p class="auth-footer" onclick="backToHero()" style="cursor: pointer; margin-top: 20px; font-size: 0.9rem; opacity: 0.7;">
+            <p class="auth-footer" onclick="backToHero()"
+                style="cursor: pointer; margin-top: 20px; font-size: 0.9rem; opacity: 0.7;">
                 <i class="fa-solid fa-arrow-left"></i> Back to Home
             </p>
         </div>
@@ -107,6 +138,7 @@
                             <i class="fa-solid fa-right-from-bracket"></i>
                         </button>
                     </div>
+                    <button id="darkModeToggle" class="icon-btn">🌙</button>
                     <a href="savings.html" class="icon-btn">💎 Savings</a>
                     <button id="exportBtn" class="icon-btn">📥 Export</button>
                 </div>
@@ -127,93 +159,145 @@
                 </div>
             </div>
 
-            <div class="budget-section card">
-                <h3>Set Monthly Budget</h3>
-                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 10px;">
-                    Current Month: <strong id="currentMonthDisplay"></strong>
-                </p>
-                <div class="budget-input-group">
-                    <input type="number" id="budgetInput" placeholder="Enter budget amount">
-                    <button id="setBudgetBtn">Set Budget</button>
-                </div>
-                <div id="budgetProgress" class="progress-bar-container" style="display: none;">
-                    <div class="progress-bar" id="progressBar"></div>
-                    <span id="progressText">0%</span>
-                </div>
-            </div>
+            <div class="main-dashboard-grid">
 
-            <div class="quick-add-section card">
-                <h3>⚡ Quick Add Templates</h3>
-                <div class="templates-container">
-                    <div id="templatesList"></div>
-                    <button class="template-add-btn" id="addTemplateBtn" title="Create new template">
-                        <span class="plus-icon">+</span>
-                    </button>
+                <div class="budget-section card">
+                    <div class="card-header-flex"
+                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                        <h3 style="margin: 0;">Set Monthly Budget</h3>
+                        <div class="month-selector-wrapper" style="display: flex; align-items: center; gap: 10px;">
+                            <label for="monthSelector"><i class="fa-regular fa-calendar-days"></i> Month:</label>
+                            <input type="month" id="monthSelector" class="month-input"
+                                style="padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
+                        </div>
+                    </div>
+                    <div class="budget-input-group">
+                        <input type="number" id="budgetInput" placeholder="Enter budget amount">
+                        <button id="setBudgetBtn">Set Budget</button>
+                    </div>
+                    <div id="budgetProgress" class="progress-bar-container" style="display: none;">
+                        <div class="progress-bar" id="progressBar"></div>
+                        <span id="progressText">0%</span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="add-expense-section card">
-                <h3>Add New Expense</h3>
-                <form id="expenseForm">
-                    <div class="form-group">
-                        <label>Amount (₹)</label>
-                        <input type="number" id="amount" required min="0" step="0.01">
+                <div class="quick-add-section card">
+                    <h3>⚡ Quick Add Templates</h3>
+                    <div class="templates-container">
+                        <div id="templatesList"></div>
+                        <button class="template-add-btn" id="addTemplateBtn" title="Create new template">
+                            <span class="plus-icon">+</span>
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label>Category</label>
-                        <select id="category" required>
-                            <option value="">Select Category</option>
-                            <option value="Food">🍔 Food</option>
-                            <option value="Transport">🚗 Transport</option>
-                            <option value="Entertainment">🎬 Entertainment</option>
-                            <option value="Shopping">🛍️ Shopping</option>
-                            <option value="Bills">💡 Bills</option>
-                            <option value="Health">🏥 Health</option>
-                            <option value="Education">📚 Education</option>
-                            <option value="Other">📦 Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <input type="text" id="description" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Date</label>
-                        <input type="date" id="date" required>
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="recurring">
-                            Recurring Expense
-                        </label>
-                    </div>
-                    <button type="submit" class="btn-primary">Add Expense</button>
-                </form>
-            </div>
-
-            <!-- Category Breakdown with Pie Chart -->
-            <div class="category-section card">
-                <h3>📊 Category Breakdown</h3>
-                <div class="chart-container">
-                    <canvas id="categoryChart"></canvas>
                 </div>
-                <div id="categoryList" class="category-list"></div>
-            </div>
 
-            <!-- Spending Over Time Chart -->
-            <div class="chart-section card">
-                <h3>📈 Spending Over Time</h3>
-                <div class="chart-container">
-                    <canvas id="spendingChart"></canvas>
+                <div class="add-expense-section card">
+                    <h3>Add New Expense</h3>
+                    <form id="expenseForm">
+                        <div class="form-group">
+                            <label>Amount (₹)</label>
+                            <input type="number" id="amount" required min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="category" required>
+                                <option value="">Select Category</option>
+                                <option value="Food">🍔 Food</option>
+                                <option value="Transport">🚗 Transport</option>
+                                <option value="Entertainment">🎬 Entertainment</option>
+                                <option value="Shopping">🛍️ Shopping</option>
+                                <option value="Bills">💡 Bills</option>
+                                <option value="Health">🏥 Health</option>
+                                <option value="Education">📚 Education</option>
+                                <option value="Other">📦 Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <input type="text" id="description" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" id="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="recurring">
+                                Recurring Expense
+                            </label>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Expense</button>
+                    </form>
                 </div>
-            </div>
 
-            <div class="expenses-section card">
-                <h3>Recent Expenses</h3>
-                <div class="search-section">
-                    <input type="text" id="searchExpenses" placeholder="🔍 Search expenses...">
+                <!-- Category Breakdown with Pie Chart -->
+                <div class="category-section card">
+                    <h3>📊 Category Breakdown</h3>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <div id="categoryList" class="category-list"></div>
                 </div>
-                <div id="expensesList"></div>
+
+                <!-- Spending Over Time Chart -->
+                <div class="chart-section card">
+                    <h3>📈 Spending Over Time</h3>
+                    <div class="chart-container">
+                        <canvas id="spendingChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="expenses-section card">
+                    <h3>Recent Expenses</h3>
+                    <div class="search-section">
+                        <input type="text" id="searchExpenses" placeholder="🔍 Search expenses...">
+                    </div>
+                    <div id="expensesList"></div>
+                </div>
+
+            </div> <!-- End of main-dashboard-grid -->
+        </div>
+
+        <!-- EXPORT INVOICE TEMPLATE (Hidden from normal view) -->
+        <div id="invoiceTemplate" style="display: none;">
+            <div class="invoice-container">
+                <div class="invoice-header">
+                    <h2>Invoice / Expense Report</h2>
+                    <p>Report for: <span id="invoiceMonth"></span></p>
+                </div>
+                <div class="invoice-summary">
+                    <div class="invoice-summary-item">
+                        <span>Total Budget:</span>
+                        <strong id="invoiceBudget">₹0</strong>
+                    </div>
+                    <div class="invoice-summary-item">
+                        <span>Total Spent:</span>
+                        <strong id="invoiceSpent">₹0</strong>
+                    </div>
+                    <div class="invoice-summary-item">
+                        <span>Remaining:</span>
+                        <strong id="invoiceRemaining">₹0</strong>
+                    </div>
+                </div>
+                <div class="invoice-body">
+                    <table class="invoice-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <thead style="background: #f1f5f9; text-align: left;">
+                            <tr>
+                                <th style="padding: 10px; border-bottom: 2px solid #cbd5e1;">Date</th>
+                                <th style="padding: 10px; border-bottom: 2px solid #cbd5e1;">Category</th>
+                                <th style="padding: 10px; border-bottom: 2px solid #cbd5e1;">Description</th>
+                                <th style="padding: 10px; border-bottom: 2px solid #cbd5e1;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoiceTableBody">
+                            <!-- Rows will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="invoice-footer"
+                    style="margin-top: 30px; text-align: center; color: #64748b; font-size: 0.9em;">
+                    <p>Generated securely by ExpenseTracker</p>
+                </div>
             </div>
         </div>
     </div>
@@ -221,10 +305,31 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
+
+    <!-- Dev Clock (must load before all app scripts) -->
+    <script src="dev-clock.js"></script>
+
     <script src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
+
+    <!-- Dev Panel (loads after app scripts so it can call them) -->
+    <script src="dev-panel.js"></script>
     <div id="toastContainer"></div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <h3 id="confirmModalTitle">Are you sure?</h3>
+            <p id="confirmModalMessage" style="color: var(--text-secondary); text-align: center; margin-bottom: 24px;">
+                This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button type="button" class="btn-secondary" id="confirmModalCancel">Cancel</button>
+                <button type="button" class="btn-primary" id="confirmModalConfirm"
+                    style="background: linear-gradient(135deg, var(--danger-color), #b91c1c);">Delete</button>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>
